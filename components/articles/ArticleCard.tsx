@@ -14,6 +14,7 @@ import {
   isArticleBookmarked,
   bookmarkArticle,
   unbookmarkArticle,
+  getUserId,
 } from '@/lib/utils/user';
 
 interface ArticleCardProps {
@@ -38,11 +39,13 @@ export default function ArticleCard({
     e.stopPropagation();
 
     try {
+      const userId = getUserId();
+
       if (isBookmarked) {
         unbookmarkArticle(article.id);
         setIsBookmarked(false);
 
-        const userId = localStorage.getItem('pheme_user_id');
+        // Also remove from database
         if (userId) {
           await fetch(
             `/api/user/bookmark?articleId=${article.id}&userId=${userId}`,
@@ -55,7 +58,7 @@ export default function ArticleCard({
         bookmarkArticle(article.id);
         setIsBookmarked(true);
 
-        const userId = localStorage.getItem('pheme_user_id');
+        // Also save to database
         if (userId) {
           await fetch('/api/user/bookmark', {
             method: 'POST',
