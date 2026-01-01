@@ -231,6 +231,33 @@ CREATE TRIGGER trigger_user_preferences_updated_at
   BEFORE UPDATE ON user_preferences
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+-- Function to create notifications for followed authors' new articles
+CREATE OR REPLACE FUNCTION notify_followers_on_new_article()
+RETURNS TRIGGER AS $$
+BEGIN
+  -- Only create notifications if the article has an author
+  IF NEW.author_id IS NOT NULL THEN
+    -- Insert notifications for all users who follow this author
+    INSERT INTO notifications (user_cookie_id, article_id, author_id, type)
+    SELECT
+      user_cookie_id,
+      NEW.id,
+      NEW.author_id,
+      'followed_author'
+    FROM user_follows
+    WHERE author_id = NEW.author_id;
+  END IF;
+
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Trigger to notify followers when a new article is published
+DROP TRIGGER IF EXISTS trigger_notify_followers_on_new_article ON articles;
+CREATE TRIGGER trigger_notify_followers_on_new_article
+  AFTER INSERT ON articles
+  FOR EACH ROW EXECUTE FUNCTION notify_followers_on_new_article();
+
 -- Enable Row Level Security (RLS) - Optional, uncomment if needed
 -- ALTER TABLE articles ENABLE ROW LEVEL SECURITY;
 -- ALTER TABLE authors ENABLE ROW LEVEL SECURITY;

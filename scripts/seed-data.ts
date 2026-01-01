@@ -239,16 +239,68 @@ async function seedDatabase() {
       }
     }
 
+    // Step 1: Create authors first
+    console.log('👤 Creating authors...\n');
+    const uniqueAuthors = Array.from(
+      new Set(sampleArticles.map((a) => a.author_name))
+    );
+
+    const authorMap = new Map<string, string>(); // author_name -> author_id
+
+    for (const authorName of uniqueAuthors) {
+      if (!authorName) continue;
+
+      const normalized = authorName
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '');
+
+      // Check if author exists
+      const { data: existingAuthor } = await supabase
+        .from('authors')
+        .select('id')
+        .eq('normalized_name', normalized)
+        .single();
+
+      if (existingAuthor) {
+        authorMap.set(authorName, existingAuthor.id);
+        console.log(`   ♻️  Author exists: ${authorName}`);
+      } else {
+        const { data: newAuthor, error } = await supabase
+          .from('authors')
+          .insert({
+            name: authorName,
+            normalized_name: normalized,
+          })
+          .select('id')
+          .single();
+
+        if (newAuthor) {
+          authorMap.set(authorName, newAuthor.id);
+          console.log(`   ✅ Created author: ${authorName}`);
+        } else {
+          console.error(`   ❌ Failed to create author: ${authorName}`);
+        }
+      }
+    }
+
+    // Step 2: Insert articles with author_id
+    console.log('\n📰 Adding articles...\n');
     let successCount = 0;
     let errorCount = 0;
 
     for (const article of sampleArticles) {
       console.log(`📝 Adding: ${article.title.substring(0, 50)}...`);
 
-      // Insert article
+      const authorId = authorMap.get(article.author_name);
+
+      // Insert article with author_id
       const { data, error } = await supabase
         .from('articles')
-        .insert(article)
+        .insert({
+          ...article,
+          author_id: authorId || null,
+        })
         .select();
 
       if (error) {
@@ -263,11 +315,37 @@ async function seedDatabase() {
       await new Promise((resolve) => setTimeout(resolve, 100));
     }
 
+    // Step 3: Create sample user follows to test notifications
+    console.log('\n👥 Setting up test user follows...\n');
+    const testUserId = 'demo-user-123'; // Sample user ID
+
+    // Follow Dr. Sarah Chen (has multiple articles)
+    const sarahChenId = authorMap.get('Dr. Sarah Chen');
+    if (sarahChenId) {
+      const { error } = await supabase
+        .from('user_follows')
+        .insert({
+          user_cookie_id: testUserId,
+          author_id: sarahChenId,
+        });
+
+      if (!error) {
+        console.log('   ✅ Test user now follows Dr. Sarah Chen');
+        console.log('   💡 When she publishes new articles, notifications will be created!');
+      }
+    }
+
     console.log(`\n✨ Seed complete!`);
     console.log(`   ✅ ${successCount} articles added`);
+    console.log(`   ✅ ${authorMap.size} authors created/verified`);
     if (errorCount > 0) {
       console.log(`   ❌ ${errorCount} errors`);
     }
+    console.log('\n🔔 Notifications system is ready!');
+    console.log('   📌 Test user ID: demo-user-123');
+    console.log('   📌 Open your browser console and run:');
+    console.log('      localStorage.setItem("pheme_user_id", "demo-user-123")');
+    console.log('   📌 Then refresh to see notifications from followed authors\n');
     console.log('\n🚀 Your app is ready! Run: npm run dev\n');
 
   } catch (error) {

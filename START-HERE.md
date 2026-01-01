@@ -36,11 +36,18 @@ Open this link: **https://supabase.com/dashboard/project/jurmkjcoklubevhzlgda/sq
 3. Click RUN
 4. Wait for "Success"
 
+**Important**: The schema now includes automatic notification triggers that create notifications when followed authors publish new articles!
+
 ### Step 2: Add Sample Articles
 
 ```bash
 npm run seed
 ```
+
+This will:
+- Create author records
+- Add 15 sample articles
+- Set up a test user with follows to demonstrate notifications
 
 ### Step 3: Start App
 
@@ -57,19 +64,25 @@ Go to: **http://localhost:3000**
 ## What You'll See
 
 - **15 sample articles** about AI, climate, health, space, science
-- **All features working**: summaries, bookmarks, search, dark mode
+- **Modern UI** with rounded edges, gradients, and smooth transitions
+- **Live search** with real-time results as you type
+- **Onboarding flow** with cookie consent for personalization
+- **Working notifications** that auto-generate when followed authors publish
 - **Real AI** using your Anthropic API key
 - **Real database** using your Supabase
 
 ## Test It Out
 
-1. **Click "Show AI Summary"** on any article → AI generates summary
-2. **Click bookmark icon** → Saves to bookmarks
-3. **Click author name** → See author profile
-4. **Click "Follow"** on author page → Get notifications
-5. **Use search bar** → Find articles
-6. **Toggle dark mode** → Moon icon in header
-7. **Read articles** → Visit "For You" for personalized feed
+1. **First visit** → See onboarding flow with cookie consent
+2. **Live search** → Type in search bar, see instant results
+3. **Click "Show AI Summary"** on any article → AI generates summary
+4. **Click bookmark icon** → Saves to bookmarks
+5. **Click author name** → See author profile
+6. **Click "Follow"** on author page → Get notifications when they publish
+7. **Check notifications** → Bell icon shows count, click to see details
+8. **Try different feeds** → All News, Trending, For You, Following, Saved
+9. **Toggle dark mode** → Moon/sun icon in header
+10. **Read articles** → Visit "For You" for personalized feed (excludes read articles)
 
 ## Files You Can Ignore
 
